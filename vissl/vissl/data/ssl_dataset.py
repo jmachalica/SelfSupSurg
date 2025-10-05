@@ -112,7 +112,7 @@ class GenericSSLDataset(VisslDatasetBase):
         for idx in range(len(self.data_sources)):
             datasource_cls = dataset_source_map[self.data_sources[idx]]
             self.data_objs.append(
-                datasource_cls(
+                datasource_cls( # TODO: REMOVE comment # calls disk_dataset_surgery
                     cfg=self.cfg,
                     path=self.data_paths[idx],
                     split=split,
@@ -252,20 +252,18 @@ class GenericSSLDataset(VisslDatasetBase):
                 labels = np.array(self.data_objs[idx].get_labels()).astype(np.int64)
             elif label_source == "synthetic":
                 labels = np.array([0 for _ in range(len(self.data_objs[idx]))])
-            elif label_source == "disk_filelist_surgery":
+            elif label_source == "disk_filelist_surgvu":
+                # TODO jmachali: adjust this to the new label source
                 with PathManager.open(self.label_paths[idx], "rb") as fopen:
                     data = pickle.load(fopen)
-                key = self.cfg.DATA.LABEL_TOOL_OR_PHASE + "_gt"
-                num_surgical_tools = (
-                    (self.cfg.DATA.NUM_OF_SURGICAL_TOOLS) if key == "Tool_gt" else 1
-                )
+                key = "phase"
                 labels = []
                 for vid_name in sorted(data.keys()):
                     labels.extend(
                         [
                             np.array(item[key]).astype(np.int64)
                             if item[key] is not None
-                            else np.array([0] * num_surgical_tools)
+                            else np.array(0)
                             for item in data[vid_name]
                         ]
                     )

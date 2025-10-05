@@ -27,7 +27,8 @@ from vissl.data.disk_dataset import DiskImageDataset
 from vissl.data.ssl_dataset import GenericSSLDataset
 from vissl.data.synthetic_dataset import SyntheticImageDataset
 from vissl.data.torchvision_dataset import TorchvisionDataset
-from vissl.data.disk_dataset_surgery import DiskImageDatasetSurgery
+from vissl.data.disk_dataset_surgvu import DiskImageDatasetSurgery
+from vissl.data.disk_dataset_surgvu import DiskImageDatasetSurgVU
 from vissl.utils.misc import set_dataloader_seeds, setup_multiprocessing_method
 
 
@@ -46,6 +47,7 @@ DATASET_SOURCE_MAP = {
     "torchvision_dataset": TorchvisionDataset,
     "synthetic": SyntheticImageDataset,
     "disk_filelist_surgery": DiskImageDatasetSurgery,
+    "disk_filelist_surgvu": DiskImageDatasetSurgVU
 }
 
 

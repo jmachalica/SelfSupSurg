@@ -95,6 +95,7 @@ results/metrics_tools_uke53hn_main_v2_ch80sub_to_ch_18_12_22_jz.csv
 tool_net_demo.py
 utils/vissl_to_tochvision_with_heads.py
 utils/visualize_sem_seg_json.py
+utils/notebooks/
 video_01_Results_Action.csv
 video_01_Results_Instrument.csv
 video_01_Results_Phase.csv
