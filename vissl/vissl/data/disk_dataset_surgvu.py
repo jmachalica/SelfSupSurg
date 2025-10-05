@@ -33,8 +33,8 @@ class DiskImageDatasetSurgVU(QueueDataset):
 
         self._load_data(path)
         self._num_samples = len(self.image_dataset)
-        self._remove_prefix = cfg["DATA"][self.split]["REMOVE_IMG_PATH_PREFIX"]
-        self._new_prefix = cfg["DATA"][self.split]["NEW_IMG_PATH_PREFIX"]
+        self._remove_prefix = cfg["DATA"][self.split].get("REMOVE_IMG_PATH_PREFIX", "")
+        self._new_prefix = cfg["DATA"][self.split].get("NEW_IMG_PATH_PREFIX", "")
         if self.data_source == "disk_filelist_surgvu":
         # Set dataset to null so that workers dont need to pickle this file.
         # This saves memory when disk_filelist is large, especially when memory mapping.
@@ -44,15 +44,22 @@ class DiskImageDatasetSurgVU(QueueDataset):
 
     def _load_data(self, path):
         if self.data_source == "disk_filelist_surgvu":
-            root_dir = os.path.dirname(path.replace("labels", "frames"))
-            file_ext = os.path.splitext(path)[1]
-            assert file_ext in [".pkl", ".pickle"], "only pickle files are supported"
-            with PathManager.open(path, "rb") as fopen:
+            label_paths = self.cfg["DATA"][self.split]["LABEL_PATHS"]
+            assert isinstance(label_paths, list) and len(label_paths) == 1, \
+                "LABEL_PATHS must be specified for disk_filelist_surgvu"
+            
+            label_path = label_paths[0] 
+            frames_root_dir = os.path.expandvars(path)
+            
+            # Load labels from pickle file
+            file_ext = os.path.splitext(label_path)[1]
+            assert file_ext in [".pkl", ".pickle"], "only pickle files are supported for labels"
+            with PathManager.open(label_path, "rb") as fopen:
                 data = pickle.load(fopen)
 
             for video_case_name in sorted(data.keys()):
                 paths = [
-                    os.path.join(root_dir, video_case_name, str(item["file_name"]))
+                    os.path.join(frames_root_dir, video_case_name, str(item["file_name"]))
                     for item in data[video_case_name]
                 ]
                 im_ids = [item["unique_id"] for item in data[video_case_name]]
@@ -69,7 +76,8 @@ class DiskImageDatasetSurgVU(QueueDataset):
         """
         Get paths of all images in the datasets. See load_data()
         """
-        self._load_data(self._path)
+        if not self.is_initialized:
+            self._load_data(self._path)
         if self.data_source == "disk_folder":
             assert isinstance(self.image_dataset, ImageFolder)
             return [sample[0] for sample in self.image_dataset.samples]
@@ -108,7 +116,7 @@ class DiskImageDatasetSurgVU(QueueDataset):
         image_path = self.image_dataset[idx]
         image_id = self.image_ids[idx]
         try:
-            if self.data_source == "disk_filelist" or "disk_filelist_surgvu":
+            if self.data_source in ["disk_filelist", "disk_filelist_surgvu"]:
                 image_path = self._replace_img_path_prefix(
                     image_path,
                     replace_prefix=self._remove_prefix,

@@ -4,7 +4,7 @@ config:
   FEATURE_EXTRACTION: False
   FEATURE_EXTRACT: Trunk
   ID: 1
-  TAG: main_surgvu2surgvu_trans_s01_moco
+  TAG: surgvu_moco_${SLURM_JOB_ID:-local}
   VERBOSE: False
   LOG_FREQUENCY: 30
   TEST_ONLY: False
@@ -19,8 +19,10 @@ config:
     NUM_CLASSES_PHASE: 8
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: [./datasets/surgvu/labels/train/train.pkl]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train]
+      LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
+      LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
       BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: sample_index
@@ -59,8 +61,8 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: True
     TEST:
-      DATA_PATHS: [./datasets/surgvu/labels/test/test.pkl]
-      LABEL_PATHS: [./datasets/surgvu/labels/test/test.pkl]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/test]
+      LABEL_PATHS: [./datasets/surgvu/labels/test.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -83,8 +85,8 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: False
     VAL:
-      DATA_PATHS: [./datasets/cholec80/labels/val/1fps.pickle]
-      LABEL_PATHS: [./datasets/cholec80/labels/val/1fps.pickle]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val]
+      LABEL_PATHS: [./datasets/surgvu/labels/val.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -186,17 +188,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    # TODO match with actual path
-    DIR: "runs/surgvu/pre_training/surgvu_to_surgvu/series_01/run_001/"
+    DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}/"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
     OVERWRITE_EXISTING: False
   HOOKS:  
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "runs/surgvu/pre_training/surgvu_to_surgvu/series_01/run_001/"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}/logs/"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: True
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "runs/surgvu/pre_training/surgvu_to_surgvu/series_01/run_001/"      
+  RUN_DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}/"      
