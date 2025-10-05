@@ -1,5 +1,5 @@
-from classy_vision.generic.util import register_transform
-from classy_vision.dataset.transforms import ClassyTransform
+from classy_vision.dataset.transforms import register_transform
+from classy_vision.dataset.transforms.classy_transform import ClassyTransform
 from typing import Any, Dict, Union
 from PIL import Image
 import torch
@@ -19,6 +19,11 @@ class CropSides(ClassyTransform):
             crop_top (int): Pixels to crop from the top.
             crop_bottom (int): Pixels to crop from the bottom.
         """
+        assert crop_left >= 0, "crop_left must be non-negative"
+        assert crop_right >= 0, "crop_right must be non-negative"  
+        assert crop_top >= 0, "crop_top must be non-negative"
+        assert crop_bottom >= 0, "crop_bottom must be non-negative"
+        
         self.crop_left = crop_left
         self.crop_right = crop_right
         self.crop_top = crop_top
