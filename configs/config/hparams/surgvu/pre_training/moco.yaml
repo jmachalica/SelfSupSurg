@@ -28,8 +28,8 @@ config:
       LABEL_TYPE: sample_index
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize # TODO match with surgvu
@@ -70,8 +70,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -94,8 +94,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:  
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50 
         - name: Resize
@@ -132,7 +132,7 @@ config:
       ]      
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
+      SYNC_BN_TYPE: pytorch     
       GROUP_SIZE: -1
     AMP_PARAMS:
       USE_AMP: True
