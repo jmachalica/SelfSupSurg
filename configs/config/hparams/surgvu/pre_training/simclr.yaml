@@ -4,8 +4,8 @@
 config:
   FEATURE_EXTRACTION: False
   FEATURE_EXTRACT: Trunk
-  ID: 2
-  TAG: surgvu_pretraining_simclr_series01
+  ID: 1
+  TAG: "surgvu_moco_${oc.env:SLURM_JOB_ID,local}"
   VERBOSE: False
   LOG_FREQUENCY: 30
   TEST_ONLY: False
@@ -20,15 +20,16 @@ config:
     NUM_CLASSES_PHASE: 8
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: ["${SCRATCH}/datasets/surgvu/labels/train/train.pkl"]
+      DATA_PATHS: ["${env:PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train"]
+      LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
       BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: sample_index
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -59,56 +60,6 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: True
-    TEST: 
-      DATA_PATHS: ["${SCRATCH}/datasets/surgvu/labels/test/test.pkl"]
-      LABEL_PATHS: ["${SCRATCH}/datasets/surgvu/labels/test/test.pkl"]
-      DATA_SOURCES: [disk_filelist_surgvu]
-      LABEL_SOURCES: [disk_filelist_surgvu]
-      DATASET_NAMES: [surgvu_dataset]
-      BATCHSIZE_PER_REPLICA: 64
-      LABEL_TYPE: standard
-      TRANSFORMS:
-        - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
-          crop_top: 50
-          crop_bottom: 50
-        - name: Resize
-          size: [224, 399]
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-      MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: False
-      DATA_LIMIT: -1
-      DROP_LAST: False
-    VAL:
-      DATA_PATHS: ["${SCRATCH}/datasets/cholec80/labels/val/1fps.pickle"]
-      LABEL_PATHS: ["${SCRATCH}/datasets/cholec80/labels/val/1fps.pickle"]
-      DATA_SOURCES: [disk_filelist_surgvu]
-      LABEL_SOURCES: [disk_filelist_surgvu]
-      DATASET_NAMES: [surgvu_dataset]
-      BATCHSIZE_PER_REPLICA: 64
-      LABEL_TYPE: standard
-      TRANSFORMS:  
-        - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
-          crop_top: 50
-          crop_bottom: 50 
-        - name: Resize
-          size: [224, 399]
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-      MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: False
-      DATA_LIMIT: -1
-      DROP_LAST: False
-  TRAINER:
-    TRAIN_STEP_NAME: custom_train_step_surgery
   METERS:
     name: ""
   MODEL:
@@ -130,7 +81,7 @@ config:
       ]      
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
+      SYNC_BN_TYPE: pytorch     
       GROUP_SIZE: -1
     AMP_PARAMS:
       USE_AMP: True
@@ -179,22 +130,22 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 8
+    NUM_PROC_PER_NODE: 2
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/series_01/checkpoints/"
+    DIR: "<SET_ME>"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
     OVERWRITE_EXISTING: False
   HOOKS:  
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/series_01/tensorboard/"
+      EXPERIMENT_LOG_DIR: "<SET_ME>"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: True
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/series_01/"
+  RUN_DIR: "<SET_ME>"
