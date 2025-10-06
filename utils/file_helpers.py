@@ -10,8 +10,6 @@ import yaml
 from types import SimpleNamespace
 import json
 import pickle
-import openpyxl as oxl
-from openpyxl.utils.dataframe import dataframe_to_rows
 import pandas as pd
 import re
 import argparse
@@ -227,16 +225,6 @@ def get_run_dir(run_name, run_id, test_args=[]):
 
 def get_extraction_dir(run_name):
     return os.path.join("data", "features", run_name)
-
-
-def mk_xls(core, defaults, nm, tags):
-    df = pd.DataFrame([{**tag, **cv, **defaults} for tag, cv in zip(tags, core)])
-    df.index += 1
-    wb = oxl.Workbook()
-    ws = wb.active
-    for r in dataframe_to_rows(df, index=True, header=True):
-        ws.append(r)
-    wb.save(nm)
 
 
 def mk_csv(core, defaults, nm, tags):

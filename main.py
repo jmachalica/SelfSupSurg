@@ -74,13 +74,20 @@ if __name__ == "__main__":
     #VisslDatasetCatalog.register_data(name="surgery_datasets", data_dict={"train": "dummy", "val":"dummy", "test":"dummy"})
     # torch.set_deterministic(True)
     parser = cov.create_argument_parser()
-    args = parser.parse_args()
+    args, unknown_args = parser.parse_known_args()
 
     config_file = args.hyper_params
     training_mode = args.mode
     split = args.split
     feature = args.feature
     print('Mode:', training_mode)
+    
+    additional_overrides = []
+    for arg in unknown_args:
+        if '=' in arg and arg.startswith('config.'):
+            additional_overrides.append(arg)
+        elif '=' in arg and arg.startswith('hydra.'):
+            additional_overrides.append(arg)
 
     override_fn = {
         'supervised': cov.supervised_overrides,
@@ -92,6 +99,9 @@ if __name__ == "__main__":
     print(('Training Mode: ' + training_mode).center(80))
     print('=' * 80)
     overrides = override_fn[training_mode](config_file, split, feature=feature)
+    
+    overrides.extend(additional_overrides)
+    print(f"Final overrides: {overrides}")
 
     assert is_hydra_available(), "Make sure to install hydra"
     hydra_main(overrides=overrides, mode=training_mode)
