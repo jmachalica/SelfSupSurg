@@ -2,8 +2,6 @@
 # SLURM environment with SCRATCH directory structure
 
 config:
-  FEATURE_EXTRACTION: False
-  FEATURE_EXTRACT: Trunk
   ID: 1
   TAG: "surgvu_moco_${oc.env:SLURM_JOB_ID,local}"
   VERBOSE: False

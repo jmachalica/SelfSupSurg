@@ -65,6 +65,10 @@ class DiskImageDatasetSurgVU(QueueDataset):
                 im_ids = [item["unique_id"] for item in data[video_case_name]]
                 self.image_dataset.extend(paths)
                 self.image_ids.extend(im_ids)
+        else:
+            raise NotImplementedError(
+                "data_source must be disk_filelist_surgvu"
+            )
 
     def num_samples(self):
         """
@@ -116,7 +120,7 @@ class DiskImageDatasetSurgVU(QueueDataset):
         image_path = self.image_dataset[idx]
         image_id = self.image_ids[idx]
         try:
-            if self.data_source in ["disk_filelist", "disk_filelist_surgvu"]:
+            if self.data_source in ["disk_filelist_surgvu"]:
                 image_path = self._replace_img_path_prefix(
                     image_path,
                     replace_prefix=self._remove_prefix,
@@ -124,8 +128,10 @@ class DiskImageDatasetSurgVU(QueueDataset):
                 )
                 with PathManager.open(image_path, "rb") as fopen:
                     img = Image.open(fopen).convert("RGB")
-            elif self.data_source == "disk_folder":
-                img = self.image_dataset[idx][0]
+            else:
+                raise NotImplementedError(
+                    "data_source must be disk_filelist_surgvu"
+                )
             if is_success and self.enable_queue_dataset:
                 self.on_sucess(img)
         except Exception as e:

@@ -1,9 +1,8 @@
-# surgvu_moco_finetuning_phase_25_0
+# surgvu_moco_finetuning_phase_100_0
 
 config:
-  FEATURE_EXTRACTION: True
   ID: 1
-  TAG: surgvu_moco_finetuning_phase_25_0_${SLURM_JOB_ID:-local}
+  TAG: surgvu_moco_finetuning_phase_100_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
   LOG_FREQUENCY: 1
   TEST_ONLY: False
@@ -22,7 +21,7 @@ config:
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
       DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train]
-      LABEL_PATHS: [./datasets/surgvu/labels/train_25_0.pkl]  # Będziesz musiał utworzyć te pliki
+      LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -188,16 +187,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/checkpoints_${SLURM_JOB_ID:-local}"
+    DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/100/0/checkpoints_${SLURM_JOB_ID:-local}"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 30
     OVERWRITE_EXISTING: True
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/tb_logs_${SLURM_JOB_ID:-local}"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/100/0/tb_logs_${SLURM_JOB_ID:-local}"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: False
       LOG_PARAMS_GRADIENTS: False
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/run_${SLURM_JOB_ID:-local}"
+  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/100/0/run_${SLURM_JOB_ID:-local}"

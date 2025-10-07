@@ -1,7 +1,6 @@
 # surgvu_imagenet_supervised_finetuning_phase_100_0 (Fully supervised ImageNet baseline)
 
 config:
-  FEATURE_EXTRACTION: True
   ID: 1
   TAG: surgvu_imagenet_supervised_finetuning_phase_100_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
@@ -20,7 +19,7 @@ config:
     NUM_CLASSES_PHASE: 8
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: ["${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train"]
+      DATA_PATHS: ["${env:PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train"]
       LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
@@ -29,8 +28,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -56,7 +55,7 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: True
     VAL:
-      DATA_PATHS: ["${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val"]
+      DATA_PATHS: ["${env:PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val"]
       LABEL_PATHS: [./datasets/surgvu/labels/val.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
@@ -65,8 +64,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -80,7 +79,7 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: False
     TEST:
-      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/test]
+      DATA_PATHS: ["${env:PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/test"]
       LABEL_PATHS: [./datasets/surgvu/labels/test.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
@@ -89,8 +88,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -103,22 +102,12 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: False
-  TRAINER:
-    TRAIN_STEP_NAME: custom_train_step_surgery
   METERS:
     name: accuracy_list_meter
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1]
   MODEL:
-    name: FCN
-    FEATURE_EVAL_SETTINGS:
-        EVAL_MODE_ON: True
-        FREEZE_TRUNK_ONLY: False
-        FREEZE_TRUNK_AND_HEAD: False
-        EVAL_TRUNK_AND_HEAD: False
-        SHOULD_FLATTEN_FEATS: False
-        EXTRACT_TRUNK_FEATURES_ONLY: False
     TRUNK:
       NAME: resnet
       RESNETS:
@@ -126,11 +115,8 @@ config:
         WIDTH_MULTIPLIER: 1
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 8]}],  # 8 klas dla SurgVU
+        ["mlp", {"dims": [2048, 8]}]
       ]
-    FCN:
-      in_features: 2048
-      out_features: 8  # 8 klas dla SurgVU
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
@@ -142,7 +128,7 @@ config:
       PARAMS_FILE: "./checkpoints/defaults/resnet_50/resnet50-19c8e357.pth"
       APPEND_PREFIX: "trunk._feature_blocks."
       REMOVE_PREFIX: ""
-      SKIP_LAYERS: ""
+      # SKIP_LAYERS: #["fc.weight", "fc.bias"] # commented, following Benchmark Full-Finetuning on ImageNet-1K
       STATE_DICT_KEY_NAME: ""
   LOSS:
     name: cross_entropy_multiple_output_single_target

@@ -1,14 +1,14 @@
-# main_ch2ch_trans_s01_simclr
+# surgvu_moco_finetuning_phase_12.5_0
 
 config:
-  FEATURE_EXTRACTION: False
-  FEATURE_EXTRACT: Trunk
-  ID: 2
-  TAG: main_ch2ch_trans_s01_simclr
+  ID: 1
+  TAG: surgvu_moco_finetuning_phase_12.5_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
-  LOG_FREQUENCY: 30
+  LOG_FREQUENCY: 1
   TEST_ONLY: False
-  TEST_MODEL: False
+  TEST_MODEL: True
+  TEST_EVERY_NUM_EPOCH: 6
+  FEATURE_EXTRACT: Head
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
   MONITOR_PERF_STATS: True
@@ -17,22 +17,24 @@ config:
   DATA:
     NUM_DATALOADER_WORKERS: 6
     NUM_OF_SURGICAL_TOOLS: 7
-    NUM_CLASSES_PHASE: 7
+    NUM_CLASSES_PHASE: 8  # SurgVU ma 8 faz
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: [./datasets/cholec80/labels/train/5fps_100_0.pickle]
-      DATA_SOURCES: [disk_filelist_surgery]
-      DATASET_NAMES: [surgery_datasets]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train]
+      LABEL_PATHS: [./datasets/surgvu/labels/train_12.5_0.pkl]  # Będziesz musiał utworzyć te pliki
+      DATA_SOURCES: [disk_filelist_surgvu]
+      LABEL_SOURCES: [disk_filelist_surgvu]
+      DATASET_NAMES: [surgvu_dataset]
       BATCHSIZE_PER_REPLICA: 64
-      LABEL_TYPE: sample_index
+      LABEL_TYPE: standard
       TRANSFORMS:
+        - name: CropSides
+          crop_lef: 200
+          crpp_right: 200
+          crop_top: 50
+          crop_bottom: 50
         - name: Resize
-          size: [252, 448]
-        - name: ImgPilToMultiCrop
-          total_num_crops: 2
-          size_crops: [224, 224]
-          num_crops: [1, 1]
-          crop_scales: [[0.5, 1], [0.5, 1]]
+          size: [224, 399]
         - name: RandAugmentSurgery
           magnitude: 8.0
           magnitude_std: 0.5
@@ -45,24 +47,28 @@ config:
         - name: ToTensor
         - name: RandomErasing
           p: 0.8
-          scale: [0.02, 0.1]        
+          scale: [0.02, 0.1]
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
           std: [0.229, 0.224, 0.225]
-      COLLATE_FUNCTION: multicrop_collator
       MMAP_MODE: True
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: True
-    TEST:
-      DATA_PATHS: [./datasets/cholec80/labels/test/1fps.pickle]
-      LABEL_PATHS: [./datasets/cholec80/labels/test/1fps.pickle]
-      DATA_SOURCES: [disk_filelist_surgery]
-      LABEL_SOURCES: [disk_filelist_surgery]
-      DATASET_NAMES: [surgery_datasets]
+    VAL:
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val]
+      LABEL_PATHS: [./datasets/surgvu/labels/val.pkl]
+      DATA_SOURCES: [disk_filelist_surgvu]
+      LABEL_SOURCES: [disk_filelist_surgvu]
+      DATASET_NAMES: [surgvu_dataset]
       BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: standard
       TRANSFORMS:
+        - name: CropSides
+          crop_lef: 200
+          crpp_right: 200
+          crop_top: 50
+          crop_bottom: 50
         - name: Resize
           size: [224, 399]
         - name: ToTensor
@@ -73,15 +79,20 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: False
-    VAL:
-      DATA_PATHS: [./datasets/cholec80/labels/val/1fps.pickle]
-      LABEL_PATHS: [./datasets/cholec80/labels/val/1fps.pickle]
-      DATA_SOURCES: [disk_filelist_surgery]
-      LABEL_SOURCES: [disk_filelist_surgery]
-      DATASET_NAMES: [surgery_datasets]
+    TEST:
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/test]
+      LABEL_PATHS: [./datasets/surgvu/labels/test.pkl]
+      DATA_SOURCES: [disk_filelist_surgvu]
+      LABEL_SOURCES: [disk_filelist_surgvu]
+      DATASET_NAMES: [surgvu_dataset]
       BATCHSIZE_PER_REPLICA: 64
       LABEL_TYPE: standard
-      TRANSFORMS:    
+      TRANSFORMS:
+        - name: CropSides
+          crop_lef: 200
+          crpp_right: 200
+          crop_top: 50
+          crop_bottom: 50
         - name: Resize
           size: [224, 399]
         - name: ToTensor
@@ -95,25 +106,31 @@ config:
   TRAINER:
     TRAIN_STEP_NAME: custom_train_step_surgery
   METERS:
-    name: ""
+    name: accuracy_list_meter
+    accuracy_list_meter:
+      num_meters: 1
+      topk_values: [1]
   MODEL:
+    name: FCN
+    FEATURE_EVAL_SETTINGS:
+        EVAL_MODE_ON: True
+        FREEZE_TRUNK_ONLY: False
+        FREEZE_TRUNK_AND_HEAD: False
+        EVAL_TRUNK_AND_HEAD: False
+        SHOULD_FLATTEN_FEATS: False
+        EXTRACT_TRUNK_FEATURES_ONLY: False
     TRUNK:
       NAME: resnet
       RESNETS:
         DEPTH: 50
         WIDTH_MULTIPLIER: 1
-      REGNET:
-        depth: 18
-        w_0: 200
-        w_a: 106.23
-        w_m: 2.48
-        group_width: 112
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 2048], "use_bn": True, "use_relu": True, "skip_last_layer_relu_bn": False}],
-        ["mlp", {"dims": [2048, 256]}],
-        ["mlp", {"dims": [256, 4096]}],
-      ]      
+        ["mlp", {"dims": [2048, 8]}],  # 8 klas dla SurgVU
+      ]
+    FCN:
+      in_features: 2048
+      out_features: 8  # 8 klas dla SurgVU
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: apex
@@ -122,28 +139,26 @@ config:
       USE_AMP: True
       AMP_TYPE: apex
     WEIGHTS_INIT:
-      PARAMS_FILE: "./checkpoints/defaults/resnet_50/resnet50-19c8e357.pth"
-      APPEND_PREFIX: "trunk._feature_blocks."
-      SKIP_LAYERS: ["num_batches_tracked"]
-      STATE_DICT_KEY_NAME: ""
+      PARAMS_FILE: "${SCRATCH}/surgvu_results/pretraining/moco/job_1933181/"
+      APPEND_PREFIX: ""
+      REMOVE_PREFIX: ""
+      SKIP_LAYERS: ""
+      STATE_DICT_KEY_NAME: "classy_state_dict"
   LOSS:
-    name: multicrop_simclr_info_nce_loss
-    multicrop_simclr_info_nce_loss:
-      temperature: 0.1
-      buffer_params:
-        embedding_dim: 4096
-      num_crops: 2
+    name: cross_entropy_multiple_output_single_target
+    cross_entropy_multiple_output_single_target:
+      ignore_index: -1
   OPTIMIZER:
       name: sgd
       use_larc: True
       larc_config:
         clip: False
         trust_coefficient: 0.001
-        eps: 0.00000001      
+        eps: 0.00000001
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 60
+      num_epochs: 30
       regularize_bn: True
       regularize_bias: True
       param_schedulers:
@@ -172,16 +187,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "runs/cholec80/pre_training/cholec_to_cholec/series_01/run_002/"
+    DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/checkpoints_${SLURM_JOB_ID:-local}"
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 10
-    OVERWRITE_EXISTING: False
-  HOOKS:  
+    CHECKPOINT_FREQUENCY: 30
+    OVERWRITE_EXISTING: True
+  HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "runs/cholec80/pre_training/cholec_to_cholec/series_01/run_002/"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/tb_logs_${SLURM_JOB_ID:-local}"
       FLUSH_EVERY_N_MIN: 20
-      LOG_PARAMS: True
-      LOG_PARAMS_GRADIENTS: True
+      LOG_PARAMS: False
+      LOG_PARAMS_GRADIENTS: False
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "runs/cholec80/pre_training/cholec_to_cholec/series_01/run_002/"
+  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/run_${SLURM_JOB_ID:-local}"

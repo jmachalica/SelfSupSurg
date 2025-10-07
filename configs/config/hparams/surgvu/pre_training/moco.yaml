@@ -1,8 +1,6 @@
 # main_ch2ch_trans_s01_moco
 
 config:
-  FEATURE_EXTRACTION: False
-  FEATURE_EXTRACT: Trunk
   ID: 1
   TAG: "surgvu_moco_${oc.env:SLURM_JOB_ID,local}"
   VERBOSE: False

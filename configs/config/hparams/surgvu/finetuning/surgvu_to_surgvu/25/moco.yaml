@@ -1,9 +1,8 @@
-# surgvu_imagenet_supervised_finetuning_phase_100_0 (Fully supervised ImageNet baseline)
+# surgvu_moco_finetuning_phase_25_0
 
 config:
-  FEATURE_EXTRACTION: True
   ID: 1
-  TAG: surgvu_imagenet_supervised_finetuning_phase_100_0_${SLURM_JOB_ID:-local}
+  TAG: surgvu_moco_finetuning_phase_25_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
   LOG_FREQUENCY: 1
   TEST_ONLY: False
@@ -17,11 +16,12 @@ config:
   ROLLING_BTIME_FREQ: 10
   DATA:
     NUM_DATALOADER_WORKERS: 6
-    NUM_CLASSES_PHASE: 8
+    NUM_OF_SURGICAL_TOOLS: 7
+    NUM_CLASSES_PHASE: 8  # SurgVU ma 8 faz
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: ["${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train"]
-      LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train]
+      LABEL_PATHS: [./datasets/surgvu/labels/train_25_0.pkl]  # Będziesz musiał utworzyć te pliki
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -56,7 +56,7 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: True
     VAL:
-      DATA_PATHS: ["${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val"]
+      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val]
       LABEL_PATHS: [./datasets/surgvu/labels/val.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
@@ -133,24 +133,24 @@ config:
       out_features: 8  # 8 klas dla SurgVU
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: pytorch
+      SYNC_BN_TYPE: apex
       GROUP_SIZE: -1
     AMP_PARAMS:
       USE_AMP: True
-      AMP_TYPE: pytorch
+      AMP_TYPE: apex
     WEIGHTS_INIT:
-      PARAMS_FILE: "./checkpoints/defaults/resnet_50/resnet50-19c8e357.pth"
-      APPEND_PREFIX: "trunk._feature_blocks."
+      PARAMS_FILE: "${SCRATCH}/surgvu_results/pretraining/moco/job_1933181/"
+      APPEND_PREFIX: ""
       REMOVE_PREFIX: ""
       SKIP_LAYERS: ""
-      STATE_DICT_KEY_NAME: ""
+      STATE_DICT_KEY_NAME: "classy_state_dict"
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
-      use_larc: False
+      use_larc: True
       larc_config:
         clip: False
         trust_coefficient: 0.001
@@ -187,16 +187,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/checkpoints_${SLURM_JOB_ID:-local}"
+    DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/checkpoints_${SLURM_JOB_ID:-local}"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 30
-    OVERWRITE_EXISTING: False
+    OVERWRITE_EXISTING: True
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/tb_logs_${SLURM_JOB_ID:-local}"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/tb_logs_${SLURM_JOB_ID:-local}"
       FLUSH_EVERY_N_MIN: 20
-      LOG_PARAMS: True
-      LOG_PARAMS_GRADIENTS: True
+      LOG_PARAMS: False
+      LOG_PARAMS_GRADIENTS: False
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/run_${SLURM_JOB_ID:-local}"
+  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/25/0/run_${SLURM_JOB_ID:-local}"

@@ -222,51 +222,17 @@ class GenericSSLDataset(VisslDatasetBase):
         """
         local_rank, _ = get_machine_local_and_dist_rank()
         for idx, label_source in enumerate(self.label_sources):
-            if label_source == "disk_filelist":
-                paths = self.label_paths[idx]
-                # in case of filelist, we support multiple label files.
-                # we rely on the user to have a proper collator to handle
-                # the multiple labels
-                logging.info(f"Loading labels: {paths}")
-                if isinstance(paths, list):
-                    labels = []
-                    for path in paths:
-                        path_labels = self.load_single_label_file(path)
-                        labels.append(path_labels)
-                else:
-                    labels = self.load_single_label_file(paths)
-                    labels = self._convert_to_numeric_ids(labels)
-            elif label_source == "disk_folder":
-                # In this case we use the labels inferred from the directory structure
-                # We enforce that the data source also be a disk folder in this case
-                assert self.data_sources[idx] == self.label_sources[idx]
-                if local_rank == 0:
-                    logging.info(
-                        f"Using {label_source} labels from {self.data_paths[idx]}"
-                    )
-                # Use the ImageFolder object created when loading images.
-                # We do not create it again since it can be an expensive operation.
-                labels = [x[1] for x in self.data_objs[idx].image_dataset.samples]
-                labels = np.array(labels).astype(np.int64)
-            elif label_source == "torchvision_dataset":
-                labels = np.array(self.data_objs[idx].get_labels()).astype(np.int64)
-            elif label_source == "synthetic":
-                labels = np.array([0 for _ in range(len(self.data_objs[idx]))])
-            elif label_source == "disk_filelist_surgvu":
+            if label_source == "disk_filelist_surgvu":
                 # TODO jmachali: adjust this to the new label source
                 with PathManager.open(self.label_paths[idx], "rb") as fopen:
                     data = pickle.load(fopen)
                 key = "phase"
                 labels = []
                 for vid_name in sorted(data.keys()):
-                    labels.extend(
-                        [
-                            np.array(item[key]).astype(np.int64)
-                            if item[key] is not None
-                            else np.array(0)
-                            for item in data[vid_name]
-                        ]
-                    )
+                    for item in data[vid_name]:
+                        if item[key] is None or not isinstance(item[key], (int, np.integer)) or item[key] < 0:
+                            raise ValueError(f"Invalid label detected: {item[key]} in video {vid_name}")
+                        labels.append(np.array(item[key]).astype(np.int64))
                 labels = np.array(labels).astype(np.int64)
             else:
                 raise ValueError(f"unknown label source: {label_source}")
