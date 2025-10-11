@@ -1,6 +1,7 @@
 # main_ch2ch_trans_s01_moco
 
 config:
+  FEATURE_EXTRACTION: False
   ID: 1
   TAG: "surgvu_moco_${oc.env:SLURM_JOB_ID,local}"
   VERBOSE: False
@@ -13,12 +14,12 @@ config:
   PERF_STAT_FREQUENCY: 10
   ROLLING_BTIME_FREQ: 10
   DATA:
-    NUM_DATALOADER_WORKERS: 6
+    NUM_DATALOADER_WORKERS: 8  # Keep per GPU
     NUM_CLASSES_PHASE: 8
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: ["${env:PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train"]
-      LABEL_PATHS: [./datasets/surgvu/labels/train.pkl]
+      DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/train"]
+      LABEL_PATHS: [/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/train.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -31,7 +32,7 @@ config:
           crop_top: 50
           crop_bottom: 50
         - name: Resize # TODO match with surgvu
-          size: [252, 448]
+          size: 256
         - name: ImgPilToMultiCrop
           total_num_crops: 2
           size_crops: [224, 224]
@@ -66,12 +67,6 @@ config:
       RESNETS:
         DEPTH: 50
         WIDTH_MULTIPLIER: 1
-      REGNET:
-        depth: 18
-        w_0: 200
-        w_a: 106.23
-        w_m: 2.48
-        group_width: 112
     HEAD:
       PARAMS: [
         ["mlp", {"dims": [2048, 2048], "use_bn": True, "use_relu": True, "skip_last_layer_relu_bn": False}],
@@ -80,7 +75,7 @@ config:
       ]      
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: pytorch     
+      SYNC_BN_TYPE: pytorch
       GROUP_SIZE: -1
     AMP_PARAMS:
       USE_AMP: True
@@ -107,7 +102,7 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 60
+      num_epochs: 200
       regularize_bn: True
       regularize_bias: True
       param_schedulers:
@@ -136,16 +131,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "<SET_ME>"
+    DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
     OVERWRITE_EXISTING: False
   HOOKS:  
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "<SET_ME>"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}/tb_logs"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: True
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "<SET_ME>"
+  RUN_DIR: "${SCRATCH}/surgvu_results/pretraining/moco/job_${SLURM_JOB_ID:-local}"

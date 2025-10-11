@@ -20,8 +20,8 @@ config:
     NUM_CLASSES_PHASE: 8  # SurgVU ma 8 faz
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
-      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/train]
-      LABEL_PATHS: [./datasets/surgvu/labels/train_25_0.pkl]  # Będziesz musiał utworzyć te pliki
+      DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/train"]
+      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/train_25.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -29,8 +29,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -56,8 +56,8 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: True
     VAL:
-      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/val]
-      LABEL_PATHS: [./datasets/surgvu/labels/val.pkl]
+      DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/val"]
+      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/val.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -65,8 +65,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
@@ -80,8 +80,8 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: False
     TEST:
-      DATA_PATHS: [${PLG_GROUPS_STORAGE}/plgg_13/surgvu_data/test]
-      LABEL_PATHS: [./datasets/surgvu/labels/test.pkl]
+      DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/test"]
+      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/test.pkl]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -89,8 +89,8 @@ config:
       LABEL_TYPE: standard
       TRANSFORMS:
         - name: CropSides
-          crop_lef: 200
-          crpp_right: 200
+          crop_left: 200
+          crop_right: 200
           crop_top: 50
           crop_bottom: 50
         - name: Resize
