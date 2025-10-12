@@ -95,11 +95,6 @@ config:
       num_crops: 2
   OPTIMIZER:
       name: sgd
-      use_larc: False
-      larc_config:
-        clip: False
-        trust_coefficient: 0.001
-        eps: 0.00000001      
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
@@ -110,7 +105,7 @@ config:
         lr:
           auto_lr_scaling:
             auto_scale: true
-            base_value: 0.1
+            base_value: 0.005
             base_lr_batch_size: 256
           name: composite
           schedulers:
