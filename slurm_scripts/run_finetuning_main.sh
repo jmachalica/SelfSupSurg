@@ -132,7 +132,7 @@ srun python main.py -hp "${CFG}" -m supervised \
   "config.DATA.VAL.DATA_PATHS=[${DATA_ROOT}/val]" \
   "config.DATA.TEST.DATA_PATHS=[${DATA_ROOT}/test]" \
   config.OPTIMIZER.num_epochs="${EPOCHS}" \
-  config.LOG_FREQUENCY=109 \
+  config.LOG_FREQUENCY=10 \
   config.TEST_EVERY_NUM_EPOCH=10 \
   "config.CHECKPOINT.DIR=${CKPT_DIR}" \
   "config.RUN_DIR=${RUN_DIR}" \

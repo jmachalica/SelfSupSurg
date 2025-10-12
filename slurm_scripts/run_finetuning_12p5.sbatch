@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=64
 #SBATCH --gres=gpu:4
 #SBATCH --mem=256G
-#SBATCH --time=00:30:00
+#SBATCH --time=06:00:00
 #SBATCH -p plgrid-gpu-a100
 #SBATCH --output=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/finetuning-%j.out
 #SBATCH --error=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/finetuning-%j.err

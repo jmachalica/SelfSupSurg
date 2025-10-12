@@ -33,7 +33,7 @@ config:
           crop_right: 200
           crop_top: 50
           crop_bottom: 50
-        - name: Resize # TODO match with surgvu
+        - name: Resize
           size: 256
         - name: RandAugmentSurgery
           magnitude: 8.0
@@ -57,7 +57,7 @@ config:
       DROP_LAST: True
     VAL:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/val"]
-      LABEL_PATHS: [/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/val.pkl]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/val.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -69,7 +69,7 @@ config:
           crop_right: 200
           crop_top: 50
           crop_bottom: 50
-        - name: Resize # TODO match with surgvu
+        - name: Resize
           size: 256
         - name: ToTensor
         - name: Normalize
@@ -81,7 +81,7 @@ config:
       DROP_LAST: False
     TEST:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/test"]
-      LABEL_PATHS: [/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/test.pkl]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/test.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -93,7 +93,7 @@ config:
           crop_right: 200
           crop_top: 50
           crop_bottom: 50
-        - name: Resize # TODO match with surgvu
+        - name: Resize
           size: 256
         - name: ToTensor
         - name: Normalize
@@ -104,7 +104,6 @@ config:
       DATA_LIMIT: -1
       DROP_LAST: False
   METERS:
-    # names: [accuracy_list_meter, mean_ap_list_meter, precision_at_k_list_meter, recall_at_k_list_meter]
     names: [accuracy_list_meter]
     accuracy_list_meter:
       num_meters: 1
