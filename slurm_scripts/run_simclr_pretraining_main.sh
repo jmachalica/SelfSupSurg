@@ -1,7 +1,6 @@
 #!/bin/bash
 # ========================================================
-# Shared finetuning script logic
-# This file is sourced by specific sbatch scripts
+# SimCLR Pre-training script logic
 # ========================================================
 
 ############################
@@ -12,7 +11,7 @@ cd "$SLURM_SUBMIT_DIR"
 DATE="$(date +'%Y%m%d_%H%M')"
 : "${SCRATCH:?SCRATCH must be set (e.g., /net/tscratch/people/$USER)}"
 
-BASE="${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/${DATA_PERCENTAGE}/job_${SLURM_JOB_ID}_${DATE}"
+BASE="${SCRATCH}/surgvu_results/pretraining/simclr/job_${SLURM_JOB_ID}_${DATE}"
 RUN_DIR="${BASE}"
 CKPT_DIR="${BASE}"
 TB_DIR="${BASE}/tb_logs"
@@ -22,7 +21,7 @@ mkdir -p "${RUN_DIR}" "${CKPT_DIR}" "${TB_DIR}" "${MON_DIR}"
 echo "[INFO] Job: $SLURM_JOB_NAME ($SLURM_JOB_ID)"
 echo "[INFO] Node(s): $SLURM_JOB_NODELIST"
 echo "[INFO] Config: ${CFG}"
-echo "[INFO] Data Percentage: ${DATA_PERCENTAGE}%"
+echo "[INFO] SimCLR Pre-training"
 
 ############################
 # ENVIRONMENT
@@ -41,7 +40,7 @@ export DATA_ROOT="${DATA_SOURCE_ROOT}"
 echo "[INFO] Using data from: ${DATA_ROOT}"
 
 # Verify data directories exist
-for split in train val test; do
+for split in train; do  # Pre-training typically uses only training data
   if [ ! -d "${DATA_ROOT}/${split}" ]; then
     echo "[ERROR] Missing data directory: ${DATA_ROOT}/${split}"
     exit 1
@@ -85,10 +84,13 @@ Job ID: ${SLURM_JOB_ID}
 Job Name: ${SLURM_JOB_NAME}
 Node(s): ${SLURM_JOB_NODELIST}
 Config: ${CFG}
-Data Percentage: ${DATA_PERCENTAGE}%
 Start Time: $(date)
 Data Source: ${DATA_SOURCE_ROOT}
 Staged Data: ${DATA_ROOT}
+Experiment Type: SimCLR Pre-training
+Epochs: ${EPOCHS}
+GPUs: ${GPUS}
+Batch per GPU: ${BATCH_PER_GPU}
 EOF
   
   set -e
@@ -114,28 +116,21 @@ start_monitoring
 ############################
 # TRAIN
 ############################
-echo "[INFO] Launching training ..."
+echo "[INFO] Launching SimCLR pre-training ..."
 
-srun python main.py -hp "${CFG}" -m supervised \
+srun python main.py -hp "${CFG}" -m self_supervised \
   config.SLURM.USE_SLURM=false \
   hydra.verbose=true \
   hydra.job_logging.root.level=DEBUG \
   config.DISTRIBUTED.NUM_PROC_PER_NODE="${GPUS}" \
   config.DATA.TRAIN.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
-  config.DATA.VAL.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
-  config.DATA.TEST.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
   config.DATA.NUM_DATALOADER_WORKERS="${WORKERS}" \
   config.DATA.TRAIN.DATA_LIMIT="${TRAIN_LIMIT}" \
-  config.DATA.VAL.DATA_LIMIT="${VAL_LIMIT}" \
-  config.DATA.TEST.DATA_LIMIT="${TEST_LIMIT}" \
   "config.DATA.TRAIN.DATA_PATHS=[${DATA_ROOT}/train]" \
-  "config.DATA.VAL.DATA_PATHS=[${DATA_ROOT}/val]" \
-  "config.DATA.TEST.DATA_PATHS=[${DATA_ROOT}/test]" \
   config.OPTIMIZER.num_epochs="${EPOCHS}" \
   config.LOG_FREQUENCY=10 \
-  config.TEST_EVERY_NUM_EPOCH=10 \
   "config.CHECKPOINT.DIR=${CKPT_DIR}" \
   "config.RUN_DIR=${RUN_DIR}" \
   "config.HOOKS.TENSORBOARD_SETUP.EXPERIMENT_LOG_DIR=${TB_DIR}"
 
-echo "[INFO] Done."
+echo "[INFO] SimCLR pre-training done."
