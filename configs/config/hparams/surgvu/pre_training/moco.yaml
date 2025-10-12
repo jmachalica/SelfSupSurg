@@ -72,7 +72,7 @@ config:
         ["mlp", {"dims": [2048, 2048], "use_bn": True, "use_relu": True, "skip_last_layer_relu_bn": False}],
         ["mlp", {"dims": [2048, 256]}],
         ["mlp", {"dims": [256, 4096]}],
-      ]      
+      ]
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
       SYNC_BN_TYPE: pytorch
@@ -102,7 +102,7 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 200
+      num_epochs: 100
       regularize_bn: True
       regularize_bias: True
       param_schedulers:

@@ -1,13 +1,14 @@
-# surgvu_moco_finetuning_phase_12.5_0
+# surgvu_moco_finetuning_phase_25_0 (Fine-tuning with MoCo pre-trained weights)
 
 config:
+  FEATURE_EXTRACTION: False
   ID: 1
-  TAG: surgvu_moco_finetuning_phase_12.5_0_${SLURM_JOB_ID:-local}
+  TAG: surgvu_moco_finetuning_phase_25_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
-  LOG_FREQUENCY: 1
+  LOG_FREQUENCY: 10
   TEST_ONLY: False
   TEST_MODEL: True
-  TEST_EVERY_NUM_EPOCH: 6
+  TEST_EVERY_NUM_EPOCH: 1 # how often to test the model during training (in epochs) - validation
   FEATURE_EXTRACT: Head
   SEED_VALUE: 0
   MULTI_PROCESSING_METHOD: forkserver
@@ -16,12 +17,11 @@ config:
   ROLLING_BTIME_FREQ: 10
   DATA:
     NUM_DATALOADER_WORKERS: 6
-    NUM_OF_SURGICAL_TOOLS: 7
-    NUM_CLASSES_PHASE: 8  # SurgVU ma 8 faz
+    NUM_CLASSES_PHASE: 8
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/train"]
-      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/train_12p5.pkl]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/train_25.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -34,7 +34,7 @@ config:
           crop_top: 50
           crop_bottom: 50
         - name: Resize
-          size: [224, 399]
+          size: 256
         - name: RandAugmentSurgery
           magnitude: 8.0
           magnitude_std: 0.5
@@ -57,7 +57,7 @@ config:
       DROP_LAST: True
     VAL:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/val"]
-      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/val.pkl]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/val.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -70,7 +70,7 @@ config:
           crop_top: 50
           crop_bottom: 50
         - name: Resize
-          size: [224, 399]
+          size: 256
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
@@ -81,7 +81,7 @@ config:
       DROP_LAST: False
     TEST:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/test"]
-      LABEL_PATHS: [./datasets/surgvu/labels/0_3fps/test.pkl]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/test.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -94,7 +94,7 @@ config:
           crop_top: 50
           crop_bottom: 50
         - name: Resize
-          size: [224, 399]
+          size: 256
         - name: ToTensor
         - name: Normalize
           mean: [0.485, 0.456, 0.406]
@@ -103,22 +103,12 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: False
-  TRAINER:
-    TRAIN_STEP_NAME: custom_train_step_surgery
   METERS:
-    name: accuracy_list_meter
+    names: [accuracy_list_meter]
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1]
   MODEL:
-    name: FCN
-    FEATURE_EVAL_SETTINGS:
-        EVAL_MODE_ON: True
-        FREEZE_TRUNK_ONLY: False
-        FREEZE_TRUNK_AND_HEAD: False
-        EVAL_TRUNK_AND_HEAD: False
-        SHOULD_FLATTEN_FEATS: False
-        EXTRACT_TRUNK_FEATURES_ONLY: False
     TRUNK:
       NAME: resnet
       RESNETS:
@@ -126,46 +116,39 @@ config:
         WIDTH_MULTIPLIER: 1
     HEAD:
       PARAMS: [
-        ["mlp", {"dims": [2048, 8]}],  # 8 klas dla SurgVU
+        ["mlp", {"dims": [2048, 8]}]
       ]
-    FCN:
-      in_features: 2048
-      out_features: 8  # 8 klas dla SurgVU
     SYNC_BN_CONFIG:
       CONVERT_BN_TO_SYNC_BN: True
-      SYNC_BN_TYPE: apex
+      SYNC_BN_TYPE: pytorch
       GROUP_SIZE: -1
     AMP_PARAMS:
       USE_AMP: True
-      AMP_TYPE: apex
+      AMP_TYPE: pytorch
     WEIGHTS_INIT:
-      PARAMS_FILE: "${SCRATCH}/surgvu_results/pretraining/moco/job_1933181/"
+      PARAMS_FILE: "/net/tscratch/people/plgjmachali/surgvu_results/pretraining/moco/job_1942741_20251010_0629/model_final_checkpoint_phase99.torch"
       APPEND_PREFIX: ""
       REMOVE_PREFIX: ""
-      SKIP_LAYERS: ""
+      SKIP_LAYERS: ["head"]  # Skip the MoCo head, keep only trunk weights
       STATE_DICT_KEY_NAME: "classy_state_dict"
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
+      weight: [0.1837, 1.0780, 1.8447, 2.1849, 3.3616, 5.2008, 13.9199, 14.8251]
       ignore_index: -1
   OPTIMIZER:
       name: sgd
-      use_larc: True
-      larc_config:
-        clip: False
-        trust_coefficient: 0.001
-        eps: 0.00000001
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 30
+      num_epochs: 120
       regularize_bn: True
       regularize_bias: True
       param_schedulers:
         lr:
           auto_lr_scaling:
             auto_scale: true
-            base_value: 0.1
+            base_value: 0.005
             base_lr_batch_size: 256
           name: composite
           schedulers:
@@ -187,16 +170,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/checkpoints_${SLURM_JOB_ID:-local}"
+    DIR: ""
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 30
-    OVERWRITE_EXISTING: True
+    CHECKPOINT_FREQUENCY: 10
+    OVERWRITE_EXISTING: False
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/tb_logs_${SLURM_JOB_ID:-local}"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/moco_to_surgvu/series_01/test/phase/25/0/tb_logs_${SLURM_JOB_ID:-local}"
       FLUSH_EVERY_N_MIN: 20
-      LOG_PARAMS: False
-      LOG_PARAMS_GRADIENTS: False
+      LOG_PARAMS: True
+      LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/surgvu_to_surgvu/series_01/test/phase/12.5/0/run_${SLURM_JOB_ID:-local}"
+  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/moco_to_surgvu/series_01/test/phase/25/0/run_${SLURM_JOB_ID:-local}"
