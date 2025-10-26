@@ -90,6 +90,10 @@ class F1ScoreMeter(ClassyMeter):
         return model_output
 
     def update(self, model_output: torch.Tensor, target: torch.Tensor, **kwargs):
+        """
+        model_output: (B, C) logits or probabilities
+        target: (B,) integer ground-truth labels
+        """
         with torch.no_grad():
             model_output = self._preprocess_logits(model_output)
             device = model_output.device
@@ -119,6 +123,16 @@ class F1ScoreMeter(ClassyMeter):
             if is_distributed_training_run():
                 self._cm = all_reduce_sum(self._cm)
                 self._total_sample_count = all_reduce_sum(self._total_sample_count)
+
+            with torch.no_grad():
+                cm = self._cm
+                if cm.sum().item() > 0:
+                    f1_pc, support, precision, recall = self._cm_to_f1s(cm)
+                    macro = float(f1_pc.mean().item())
+                    w = torch.where(support > 0, support / support.sum(), torch.zeros_like(support))
+                    weighted = float((f1_pc * w).sum().item())
+                    accuracy = float(cm.diag().sum().item() / cm.sum().item())
+                    self._write_full_report(cm, f1_pc, support, precision, recall, macro, weighted, accuracy)
 
             self._curr_cm.zero_()
             self._curr_sample_count.zero_()
@@ -207,17 +221,13 @@ class F1ScoreMeter(ClassyMeter):
             total_n = (self._total_sample_count + self._curr_sample_count).item()
 
             if cm.sum().item() == 0 or total_n == 0:
-                return {"macro": 0.0, "weighted": 0.0}
+                return {"macro": 0.0, "weighted": 0.0, "accuracy": 0.0}
 
             f1_per_class, support, precision, recall = self._cm_to_f1s(cm)
             macro_f1 = float(f1_per_class.mean().item())
             weights = torch.where(support > 0, support / support.sum(), torch.zeros_like(support))
             weighted_f1 = float((f1_per_class * weights).sum().item())
             accuracy = float(cm.diag().sum().item() / cm.sum().item())
-
-            # write full report files (rank-0 only)
-            self._write_full_report(cm, f1_per_class, support, precision, recall,
-                                    macro_f1, weighted_f1, accuracy)
 
             # return basic values only
             return {"macro": macro_f1, "weighted": weighted_f1, "accuracy": accuracy}
