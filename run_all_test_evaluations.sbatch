@@ -53,7 +53,7 @@ export DATE="${DATE}"
 ############################
 # DEFINE MODEL CONFIGURATIONS
 ############################
-# Based on detailed_metrics.csv
+# Based on train_val_results.csv
 
 declare -A MODELS=(
     ["imagenet_to_surgvu,12"]="/net/tscratch/people/plgjmachali/surgvu_results/finetuning/imagenet_to_surgvu/12/job_1952602_20251015_1437/model_phase1.torch,hparams/surgvu/finetuning/imagenet_to_surgvu/12/imagenet_test_only.yaml"
