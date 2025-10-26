@@ -114,7 +114,17 @@ start_monitoring
 ############################
 # TRAIN
 ############################
-echo "[INFO] Launching training ..."
+
+export PYTHONWARNINGS="default,\
+ignore::UserWarning:torchvision.transforms._functional_video,\
+ignore::UserWarning:torchvision.transforms._transforms_video,\
+ignore:.*fvcore version of PathManager.*:UserWarning,\
+ignore:.*Please migrate to the version in iopath repo.*:UserWarning"
+
+
+export RUN_DIR # for f1 metrics
+
+echo "[INFO] Launching SimCLR fine-tuning ..."
 
 srun python main.py -hp "${CFG}" -m supervised \
   config.SLURM.USE_SLURM=false \
@@ -122,18 +132,16 @@ srun python main.py -hp "${CFG}" -m supervised \
   hydra.job_logging.root.level=DEBUG \
   config.DISTRIBUTED.NUM_PROC_PER_NODE="${GPUS}" \
   config.DATA.TRAIN.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
-  config.DATA.VAL.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
   config.DATA.TEST.BATCHSIZE_PER_REPLICA="${BATCH_PER_GPU}" \
   config.DATA.NUM_DATALOADER_WORKERS="${WORKERS}" \
   config.DATA.TRAIN.DATA_LIMIT="${TRAIN_LIMIT}" \
-  config.DATA.VAL.DATA_LIMIT="${VAL_LIMIT}" \
   config.DATA.TEST.DATA_LIMIT="${TEST_LIMIT}" \
   "config.DATA.TRAIN.DATA_PATHS=[${DATA_ROOT}/train]" \
-  "config.DATA.VAL.DATA_PATHS=[${DATA_ROOT}/val]" \
-  "config.DATA.TEST.DATA_PATHS=[${DATA_ROOT}/test]" \
+  "config.DATA.TEST.DATA_PATHS=[${DATA_ROOT}/val]" \
   config.OPTIMIZER.num_epochs="${EPOCHS}" \
   config.LOG_FREQUENCY=10 \
-  config.TEST_EVERY_NUM_EPOCH=10 \
+  config.TEST_EVERY_NUM_EPOCH=1 \
+  config.CHECKPOINT.CHECKPOINT_FREQUENCY=1 \
   "config.CHECKPOINT.DIR=${CKPT_DIR}" \
   "config.RUN_DIR=${RUN_DIR}" \
   "config.HOOKS.TENSORBOARD_SETUP.EXPERIMENT_LOG_DIR=${TB_DIR}"

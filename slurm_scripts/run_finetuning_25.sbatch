@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=64
 #SBATCH --gres=gpu:4
 #SBATCH --mem=256G
-#SBATCH --time=12:00:00
+#SBATCH --time=6:00:00
 #SBATCH -p plgrid-gpu-a100
 #SBATCH --output=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/finetuning-%j.out
 #SBATCH --error=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/finetuning-%j.err
@@ -23,12 +23,11 @@ export CONDA_ENV="/net/pr2/projects/plgrid/plgg_13/conda/envs/vissl_3_8"
 export CFG="hparams/surgvu/finetuning/imagenet_to_surgvu/25/imagenet_fully_supervised.yaml"
 export DATA_PERCENTAGE="25"
 
-export EPOCHS=100
+export EPOCHS=50
 export BATCH_PER_GPU=256
-export WORKERS=8  # Test: więcej workers per GPU (4×12=48 total)
+export WORKERS=8
 export GPUS=4
 export TRAIN_LIMIT=-1
-export VAL_LIMIT=-1
 export TEST_LIMIT=-1
 
 export DATA_SOURCE_ROOT="/net/tscratch/people/plgjmachali/surgvu_data_sampled_03"

@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=64
 #SBATCH --gres=gpu:4
 #SBATCH --mem=256G
-#SBATCH --time=06:00:00
+#SBATCH --time=04:00:00
 #SBATCH -p plgrid-gpu-a100
 #SBATCH --output=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/moco_finetuning-%j.out
 #SBATCH --error=/net/tscratch/people/plgjmachali/surgvu_results/logs/finetuning/moco_finetuning-%j.err
@@ -28,13 +28,12 @@ export BATCH_PER_GPU=256
 export WORKERS=8
 export GPUS=4
 export TRAIN_LIMIT=-1
-export VAL_LIMIT=-1
 export TEST_LIMIT=-1
 
 export DATA_SOURCE_ROOT="/net/tscratch/people/plgjmachali/surgvu_data_sampled_03"
 
 # ⚠️ MOCO CHECKPOINT PATH - Verify this exists!
-export MOCO_CHECKPOINT_PATH="/net/tscratch/people/plgjmachali/surgvu_results/pretraining/moco/job_1942741_20251010_0629/model_final_checkpoint_phase99.torch"
+export MOCO_CHECKPOINT_PATH="/net/tscratch/people/plgjmachali/surgvu_results/pretraining/moco/job_1952567_20251015_1420/model_final_checkpoint_phase149.torch"
 
 # Verify checkpoint exists
 if [ ! -f "${MOCO_CHECKPOINT_PATH}" ]; then

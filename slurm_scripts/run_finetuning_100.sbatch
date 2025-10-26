@@ -23,12 +23,11 @@ export CONDA_ENV="/net/pr2/projects/plgrid/plgg_13/conda/envs/vissl_3_8"
 export CFG="hparams/surgvu/finetuning/imagenet_to_surgvu/100/imagenet_fully_supervised.yaml"
 export DATA_PERCENTAGE="100"
 
-export EPOCHS=100  # Fine-tuning potrzebuje mniej epochs
-export BATCH_PER_GPU=256  # 4×256=1024 (identyczny global batch)
-export WORKERS=8  # 3x workers per GPU
-export GPUS=4  # Łatwiej dostać 4 GPU niż 8
+export EPOCHS=50
+export BATCH_PER_GPU=256
+export WORKERS=8
+export GPUS=4
 export TRAIN_LIMIT=-1
-export VAL_LIMIT=-1
 export TEST_LIMIT=-1
 
 export DATA_SOURCE_ROOT="/net/tscratch/people/plgjmachali/surgvu_data_sampled_03"

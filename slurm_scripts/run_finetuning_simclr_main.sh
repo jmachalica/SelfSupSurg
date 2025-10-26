@@ -1,7 +1,7 @@
 #!/bin/bash
 # ========================================================
-# Shared MoCo fine-tuning script logic
-# This file is sourced by specific MoCo fine-tuning sbatch scripts
+# Shared SimCLR fine-tuning script logic
+# This file is sourced by specific SimCLR fine-tuning sbatch scripts
 # ========================================================
 
 ############################
@@ -12,7 +12,7 @@ cd "$SLURM_SUBMIT_DIR"
 DATE="$(date +'%Y%m%d_%H%M')"
 : "${SCRATCH:?SCRATCH must be set (e.g., /net/tscratch/people/$USER)}"
 
-BASE="${SCRATCH}/surgvu_results/finetuning/moco_to_surgvu/${DATA_PERCENTAGE}/job_${SLURM_JOB_ID}_${DATE}"
+BASE="${SCRATCH}/surgvu_results/finetuning/simclr_to_surgvu/${DATA_PERCENTAGE}/job_${SLURM_JOB_ID}_${DATE}"
 RUN_DIR="${BASE}"
 CKPT_DIR="${BASE}"
 TB_DIR="${BASE}/logs"
@@ -23,7 +23,7 @@ echo "[INFO] Job: $SLURM_JOB_NAME ($SLURM_JOB_ID)"
 echo "[INFO] Node(s): $SLURM_JOB_NODELIST"
 echo "[INFO] Config: ${CFG}"
 echo "[INFO] Data Percentage: ${DATA_PERCENTAGE}%"
-echo "[INFO] MoCo Fine-tuning from checkpoint: ${MOCO_CHECKPOINT_PATH}"
+echo "[INFO] SimCLR Fine-tuning from checkpoint: ${SIMCLR_CHECKPOINT_PATH}"
 
 ############################
 # ENVIRONMENT
@@ -90,8 +90,8 @@ Data Percentage: ${DATA_PERCENTAGE}%
 Start Time: $(date)
 Data Source: ${DATA_SOURCE_ROOT}
 Staged Data: ${DATA_ROOT}
-MoCo Checkpoint: ${MOCO_CHECKPOINT_PATH}
-Experiment Type: MoCo Fine-tuning
+SimCLR Checkpoint: ${SIMCLR_CHECKPOINT_PATH}
+Experiment Type: SimCLR Fine-tuning
 Epochs: ${EPOCHS}
 GPUs: ${GPUS}
 Batch per GPU: ${BATCH_PER_GPU}
@@ -151,6 +151,6 @@ srun python main.py -hp "${CFG}" -m supervised \
   "config.CHECKPOINT.DIR=${CKPT_DIR}" \
   "config.RUN_DIR=${RUN_DIR}" \
   "config.HOOKS.TENSORBOARD_SETUP.EXPERIMENT_LOG_DIR=${TB_DIR}" \
-  "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=${MOCO_CHECKPOINT_PATH}"
+  "config.MODEL.WEIGHTS_INIT.PARAMS_FILE=${SIMCLR_CHECKPOINT_PATH}"
 
-echo "[INFO] MoCo fine-tuning done."
+echo "[INFO] SimCLR fine-tuning done."
