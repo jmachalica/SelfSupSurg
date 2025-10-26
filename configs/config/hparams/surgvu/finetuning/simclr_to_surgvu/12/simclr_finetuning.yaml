@@ -1,9 +1,9 @@
-# surgvu_imagenet_supervised_finetuning_phase_100_0 (Fully supervised ImageNet baseline)
+# surgvu_simclr_finetuning_phase_12_0 (Fine-tuning with SimCLR pre-trained weights)
 
 config:
   FEATURE_EXTRACTION: False
   ID: 1
-  TAG: surgvu_imagenet_supervised_finetuning_phase_100_0_${SLURM_JOB_ID:-local}
+  TAG: surgvu_simclr_finetuning_phase_12_0_${SLURM_JOB_ID:-local}
   VERBOSE: False
   LOG_FREQUENCY: 10
   TEST_ONLY: False
@@ -21,7 +21,7 @@ config:
     LABEL_TOOL_OR_PHASE: Phase
     TRAIN:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/train"]
-      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/train.pkl"]
+      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/train_12p5.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
       LABEL_SOURCES: [disk_filelist_surgvu]
       DATASET_NAMES: [surgvu_dataset]
@@ -105,11 +105,11 @@ config:
       USE_AMP: True
       AMP_TYPE: pytorch
     WEIGHTS_INIT:
-      PARAMS_FILE: "./checkpoints/defaults/resnet_50/resnet50-19c8e357.pth"
-      APPEND_PREFIX: "trunk._feature_blocks."
+      PARAMS_FILE: "/net/tscratch/people/plgjmachali/surgvu_results/pretraining/simclr/job_1948589_20251014_0023/model_phase150.torch"
+      APPEND_PREFIX: ""
       REMOVE_PREFIX: ""
-      # SKIP_LAYERS: #["fc.weight", "fc.bias"] # commented, following Benchmark Full-Finetuning on ImageNet-1K
-      STATE_DICT_KEY_NAME: ""
+      SKIP_LAYERS: ["head"]  # Skip the SimCLR head, keep only trunk weights
+      STATE_DICT_KEY_NAME: "classy_state_dict"
   LOSS:
     name: cross_entropy_multiple_output_single_target
     cross_entropy_multiple_output_single_target:
@@ -147,16 +147,16 @@ config:
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/checkpoints_${SLURM_JOB_ID:-local}"
+    DIR: ""
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 1
     OVERWRITE_EXISTING: False
   HOOKS:
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/tb_logs_${SLURM_JOB_ID:-local}"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/finetuning/simclr_to_surgvu/series_01/test/phase/12/0/tb_logs_${SLURM_JOB_ID:-local}"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: True
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/imagenet_to_surgvu/series_01/test/phase/100/0/run_${SLURM_JOB_ID:-local}"
+  RUN_DIR: "${SCRATCH}/surgvu_results/finetuning/simclr_to_surgvu/series_01/test/phase/12/0/run_${SLURM_JOB_ID:-local}"

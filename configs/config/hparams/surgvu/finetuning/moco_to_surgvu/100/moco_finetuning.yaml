@@ -55,7 +55,7 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: True
-    VAL:
+    TEST:
       DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/val"]
       LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/val.pkl"]
       DATA_SOURCES: [disk_filelist_surgvu]
@@ -79,35 +79,14 @@ config:
       COPY_TO_LOCAL_DISK: False
       DATA_LIMIT: -1
       DROP_LAST: False
-    TEST:
-      DATA_PATHS: ["/net/tscratch/people/plgjmachali/surgvu_data_sampled_03/test"]
-      LABEL_PATHS: ["/net/pr2/projects/plgrid/plgg_13/sources/SelfSupSurg/datasets/surgvu/labels/0_3fps/test.pkl"]
-      DATA_SOURCES: [disk_filelist_surgvu]
-      LABEL_SOURCES: [disk_filelist_surgvu]
-      DATASET_NAMES: [surgvu_dataset]
-      BATCHSIZE_PER_REPLICA: 64
-      LABEL_TYPE: standard
-      TRANSFORMS:
-        - name: CropSides
-          crop_left: 200
-          crop_right: 200
-          crop_top: 50
-          crop_bottom: 50
-        - name: Resize
-          size: 256
-        - name: ToTensor
-        - name: Normalize
-          mean: [0.485, 0.456, 0.406]
-          std: [0.229, 0.224, 0.225]
-      MMAP_MODE: True
-      COPY_TO_LOCAL_DISK: False
-      DATA_LIMIT: -1
-      DROP_LAST: False
   METERS:
-    names: [accuracy_list_meter]
+    names: [accuracy_list_meter, f1_score_list_meter]
     accuracy_list_meter:
       num_meters: 1
       topk_values: [1]
+    f1_score_list_meter:
+      num_meters: 1
+      num_classes: 8
   MODEL:
     TRUNK:
       NAME: resnet
@@ -138,7 +117,7 @@ config:
       ignore_index: -1
   OPTIMIZER:
       name: sgd
-      weight_decay: 0.000001
+      weight_decay: 0.0002
       momentum: 0.9
       nesterov: False
       num_epochs: 120
@@ -146,21 +125,19 @@ config:
       regularize_bias: True
       param_schedulers:
         lr:
-          auto_lr_scaling:
-            auto_scale: true
-            base_value: 0.005
-            base_lr_batch_size: 256
           name: composite
-          schedulers:
-            - name: linear
-              start_value: 0.6
-              end_value: 4.8
-            - name: cosine
-              start_value: 4.8
-              end_value: 0.0000
           update_interval: step
-          interval_scaling: [rescaled, fixed]
-          lengths: [0.05, 0.95]
+          auto_lr_scaling:
+            auto_scale: false
+          schedulers:
+            - name: linear          # warm-up 10%
+              start_value: 0.0075   # ~0.5 × 0.015
+              end_value:   0.010    # peak
+            - name: cosine          # decay 90%
+              start_value: 0.015
+              end_value:   0.0005
+          interval_scaling: [rescaled, rescaled]
+          lengths: [0.10, 0.90]
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
@@ -172,7 +149,7 @@ config:
   CHECKPOINT:
     DIR: ""
     AUTO_RESUME: True
-    CHECKPOINT_FREQUENCY: 10
+    CHECKPOINT_FREQUENCY: 1
     OVERWRITE_EXISTING: False
   HOOKS:
     TENSORBOARD_SETUP:
