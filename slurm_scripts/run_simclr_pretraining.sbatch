@@ -22,10 +22,10 @@ set -euo pipefail
 export CONDA_ENV="/net/pr2/projects/plgrid/plgg_13/conda/envs/vissl_3_8"
 export CFG="hparams/surgvu/pre_training/simclr.yaml"
 
-export EPOCHS=200  # SimCLR typically needs fewer epochs than MoCo
+export EPOCHS=150
 export BATCH_PER_GPU=256
 export WORKERS=8
-export GPUS=4  # SimCLR config has NUM_PROC_PER_NODE: 2
+export GPUS=4
 export TRAIN_LIMIT=-1
 
 export DATA_SOURCE_ROOT="/net/tscratch/people/plgjmachali/surgvu_data_sampled_03"

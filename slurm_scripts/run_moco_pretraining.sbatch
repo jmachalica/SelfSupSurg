@@ -3,9 +3,9 @@
 #SBATCH -J surgvu_moco_pretrain
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=128
-#SBATCH --gres=gpu:8
-#SBATCH --mem=512G
+#SBATCH --cpus-per-task=64
+#SBATCH --gres=gpu:4
+#SBATCH --mem=256G
 #SBATCH --time=24:00:00
 #SBATCH -p plgrid-gpu-a100
 #SBATCH --output=/net/tscratch/people/plgjmachali/surgvu_results/logs/pretraining/moco_output-%j.out
@@ -22,10 +22,10 @@ set -euo pipefail
 export CONDA_ENV="/net/pr2/projects/plgrid/plgg_13/conda/envs/vissl_3_8"
 export CFG="hparams/surgvu/pre_training/moco.yaml"
 
-export EPOCHS=100
-export BATCH_PER_GPU=128
+export EPOCHS=150
+export BATCH_PER_GPU=256
 export WORKERS=8
-export GPUS=8  # MoCo config has NUM_PROC_PER_NODE: 2
+export GPUS=4
 export TRAIN_LIMIT=-1
 
 export DATA_SOURCE_ROOT="/net/tscratch/people/plgjmachali/surgvu_data_sampled_03"
