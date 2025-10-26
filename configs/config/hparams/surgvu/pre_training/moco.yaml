@@ -97,7 +97,7 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 100
+      num_epochs: 150
       regularize_bn: True
       regularize_bias: True
       param_schedulers:
@@ -120,7 +120,7 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 4
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:

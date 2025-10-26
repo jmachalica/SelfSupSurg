@@ -98,7 +98,7 @@ config:
       weight_decay: 0.000001
       momentum: 0.9
       nesterov: False
-      num_epochs: 60
+      num_epochs: 150
       regularize_bn: True
       regularize_bias: True
       param_schedulers:
@@ -121,22 +121,22 @@ config:
   DISTRIBUTED:
     BACKEND: nccl
     NUM_NODES: 1
-    NUM_PROC_PER_NODE: 2
+    NUM_PROC_PER_NODE: 4
     INIT_METHOD: tcp
     RUN_ID: auto
   MACHINE:
     DEVICE: gpu
   CHECKPOINT:
-    DIR: "<SET_ME>"
+    DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/job_${SLURM_JOB_ID:-local}"
     AUTO_RESUME: True
     CHECKPOINT_FREQUENCY: 10
     OVERWRITE_EXISTING: False
   HOOKS:  
     TENSORBOARD_SETUP:
       USE_TENSORBOARD: True
-      EXPERIMENT_LOG_DIR: "<SET_ME>"
+      EXPERIMENT_LOG_DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/job_${SLURM_JOB_ID:-local}/tb_logs"
       FLUSH_EVERY_N_MIN: 20
       LOG_PARAMS: True
       LOG_PARAMS_GRADIENTS: True
       LOG_PARAMS_EVERY_N_ITERS: -1
-  RUN_DIR: "<SET_ME>"
+  RUN_DIR: "${SCRATCH}/surgvu_results/pretraining/simclr/job_${SLURM_JOB_ID:-local}"
