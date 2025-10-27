@@ -53,7 +53,7 @@ dist/
 # pytorch/python/numpy formats
 *.pth
 *.pkl
-!datasets/surgvu/labels/*.pkl
+!datasets/surgvu/labels/**/*.pkl
 *.npy
 
 # ipython/jupyter notebooks
