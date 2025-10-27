@@ -234,7 +234,7 @@ def main():
         print(df[display_columns].to_string(index=False, float_format="%.4f"))
         
         # Save to CSV
-        output_csv = "test_evaluation_results.csv"
+        output_csv = "test_results.csv"
         df.to_csv(output_csv, index=False)
         print(f"\n💾 Results saved to: {output_csv}")
         
