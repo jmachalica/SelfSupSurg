@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=32G
 #SBATCH --time=24:00:00
-#SBATCH -p plgrid-gpu-a100         # jeśli masz kolejkę CPU, użyj jej zamiast GPU
+#SBATCH -p plgrid-gpu-a100         # if you have CPU queue, use it instead of GPU
 #SBATCH --output=/net/tscratch/people/%u/surgvu_copy/logs/out-%j.log
 #SBATCH --error=/net/tscratch/people/%u/surgvu_copy/logs/err-%j.log
 # ========================================================
@@ -14,8 +14,8 @@
 set -euo pipefail
 
 DATE="$(date +'%Y%m%d_%H%M')"
-SRC="/net/pr2/projects/plgrid/plgg_13/surgvu_data"         # źródło: ma train/ val/ test
-DST="/net/tscratch/people/plgjmachali/surgvu_data"         # cel na SCRATCH
+SRC="/net/pr2/projects/plgrid/plgg_13/surgvu_data"         # source: has train/ val/ test
+DST="/net/tscratch/people/plgjmachali/surgvu_data"         # destination on SCRATCH
 BASE="/net/tscratch/people/${USER}/surgvu_copy/job_${SLURM_JOB_ID}_${DATE}"
 MON_DIR="${BASE}/monitoring"
 mkdir -p "${DST}" "${MON_DIR}" "${BASE}"

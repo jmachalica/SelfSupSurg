@@ -9,14 +9,14 @@ fi
 
 JOB_ID=$1
 
-# ---- Roots (uogólnione) ----
+# ---- Roots (generalized) ----
 RESULTS_ROOT="/net/tscratch/people/plgjmachali/surgvu_results"
 LOGS_ROOT="${RESULTS_ROOT}/logs"
 
-# ---- Znajdź logi .out / .err (dowolny prefix), wybierz najnowsze ----
+# ---- Find .out / .err logs (any prefix), select newest ----
 get_newest_log() {
-  local pattern="$1"   # np. "*.out" lub "*.err"
-  # szukamy plików dopasowanych do "*-${JOB_ID}.out" lub "*-${JOB_ID}.err"
+  local pattern="$1"   # e.g. "*.out" or "*.err"
+  # search for files matching "*-${JOB_ID}.out" or "*-${JOB_ID}.err"
   find "${LOGS_ROOT}" -type f -name "*-${JOB_ID}.${pattern}" -printf "%T@ %p\n" 2>/dev/null \
     | sort -nr | awk 'NR==1{print $2}'
 }
@@ -48,10 +48,10 @@ echo "=== Checking for 'All done' message in the output log ==="
 if grep -qi "All done" "$OUT_LOG"; then
   echo "Job $JOB_ID completed successfully."
 else
-  echo -e "\e[33mJob $JOB_ID may not have completed successfully or the 'All done' message is missing.\e[0m"
+  echo "Job $JOB_ID may not have completed successfully or the 'All done' message is missing.\e[0m"
 fi
 
-# ---- Znajdź katalog wyników (dowolna gałąź), wybierz najnowszy ----
+# ---- Find results directory (any branch), select newest ----
 RESULTS_FOLDER=$(find "${RESULTS_ROOT}" -type d -name "job_${JOB_ID}_*" -printf "%T@ %p\n" 2>/dev/null \
   | sort -nr | awk 'NR==1{for (i=2;i<=NF;i++){printf "%s%s", $i, (i<NF?" ":"")}}')
 
@@ -62,7 +62,7 @@ fi
 
 echo "=== Results folder: $RESULTS_FOLDER ==="
 
-# ---- metrics.json (opcjonalnie) ----
+# ---- metrics.json (optional) ----
 METRICS_FILE="${RESULTS_FOLDER}/metrics.json"
 if [ -f "$METRICS_FILE" ]; then
   echo "=== Extracting key metrics from metrics.json ==="
@@ -78,7 +78,7 @@ if [ -f "$METRICS_FILE" ]; then
     if ! command -v jq >/dev/null 2>&1; then
     echo -e "\e[31m'jq' not found. Please install jq to extract best model from metrics.json.\e[0m"
     else
-    # 1) Spróbuj test top-1
+    # 1) Try test top-1
     TEST_COUNT=$(jq -c 'select(.test_accuracy_list_meter? != null)' "$METRICS_FILE" | wc -l | tr -d ' ')
     if [ "${TEST_COUNT}" -gt 0 ]; then
         BEST_LINE=$(jq -r '
@@ -101,7 +101,7 @@ if [ -f "$METRICS_FILE" ]; then
         fi
     fi
 
-    # 2) Jeśli brak testu — spróbuj walidacji
+    # 2) If no test — try validation
     if [ -z "${FOUND_BEST:-}" ]; then
         VAL_COUNT=$(jq -c 'select(.val_accuracy_list_meter? != null)' "$METRICS_FILE" | wc -l | tr -d ' ')
         if [ "${VAL_COUNT}" -gt 0 ]; then
@@ -126,7 +126,7 @@ if [ -f "$METRICS_FILE" ]; then
         fi
     fi
 
-    # 3) Jeśli nie ma test/val w metrics.json — wybierz najnowszy checkpoint
+    # 3) If no test/val in metrics.json — select newest checkpoint
     if [ -z "${FOUND_BEST:-}" ]; then
         LATEST_MODEL=$(ls -1 "${RESULTS_FOLDER}"/model_phase*.torch 2>/dev/null \
         | sed -E 's/.*model_phase([0-9]+)\.torch/\1 \0/' \
@@ -156,7 +156,7 @@ if [ -n "${SCRATCH:-}" ]; then
   )
 fi
 
-# Fallback: całe drzewo wyników
+# Fallback: entire results tree
 while IFS= read -r p; do TOP_CANDIDATES+=("$p"); done < <(
   find "${RESULTS_ROOT}" -type f -path "*/job_${JOB_ID}_*/monitoring/top.log" 2>/dev/null | head -n 3
 )
@@ -183,7 +183,7 @@ else
   | awk 'BEGIN{m=0} {v=$1+0; if(v>m)m=v} END{if(m>0) printf "%.1f\n", m}'
 )
 
-# Max 'avail Mem' (MiB) – liczba stojąca PRZED frazą 'avail Mem' (ta jest w liniach MiB Swap)
+# Max 'avail Mem' (MiB) – number before 'avail Mem' phrase (in MiB Swap lines)
 MAX_AVAIL=$(
   grep -a "avail Mem" "$FOUND_TOP" \
   | sed -E 's/.*\s([0-9.]+)\s+avail Mem.*/\1/' \

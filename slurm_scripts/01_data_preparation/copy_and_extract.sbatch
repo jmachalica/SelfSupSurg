@@ -3,28 +3,28 @@
 #SBATCH -J stage_and_extract_localfs_test
 #SBATCH -N 1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=64          # podnieś jeśli chcesz większą równoległość
+#SBATCH --cpus-per-task=64          # increase if you want more parallelism
 #SBATCH --mem=32G
 #SBATCH --time=02:00:00
 #SBATCH -p plgrid-gpu-a100
 #SBATCH --output=/net/tscratch/people/%u/surgvu_stage/logs/out-%j.log
 #SBATCH --error=/net/tscratch/people/%u/surgvu_stage/logs/err-%j.log
-#SBATCH -C localfs                   # WYMAGANE, żeby mieć $SCRATCH_LOCAL
+#SBATCH -C localfs                   # REQUIRED to have $SCRATCH_LOCAL
 # ========================================================
 
 set -euo pipefail
 
 DATE="$(date +'%Y%m%d_%H%M')"
 
-# --- skąd bierzemy tar-y (na SCRATCH) ---
+# --- where we get tar files from (on SCRATCH) ---
 SRC_TRAIN="/net/tscratch/people/plgjmachali/surgvu_data_tars/train_tars"
 SRC_VAL="/net/tscratch/people/plgjmachali/surgvu_data_tars/val_tars"
 SRC_TEST="/net/tscratch/people/plgjmachali/surgvu_data_tars/test_tars"
 
-# --- dokąd kopiujemy i rozpakowujemy na localfs ---
+# --- where we copy and extract on localfs ---
 STAGE_ROOT="${SCRATCH_LOCAL}/surgvu_stage_test"
-DST_TARS="${STAGE_ROOT}/tars"             # tu kopiujemy tar-y
-DST_EXTRACT="${STAGE_ROOT}/extracted"     # tu rozpakowujemy
+DST_TARS="${STAGE_ROOT}/tars"             # tar files copied here
+DST_EXTRACT="${STAGE_ROOT}/extracted"     # extract here
 
 BASE="/net/tscratch/people/${USER}/surgvu_stage/job_${SLURM_JOB_ID}_${DATE}"
 MON_DIR="${BASE}/monitoring"
@@ -57,27 +57,27 @@ trap stop_monitoring EXIT
 start_monitoring
 # --------------------------------------------
 
-# ===== ustawienia równoległości =====
+# ===== parallelism settings =====
 CPUS="${SLURM_CPUS_PER_TASK:-32}"
-PAR_COPY=$(( CPUS ))          # ile równoległych kopii .tar
-PAR_EXTRACT=$(( CPUS / 2 ))   # ile równoległych rozpakowań
+PAR_COPY=$(( CPUS ))          # how many parallel .tar copies
+PAR_EXTRACT=$(( CPUS / 2 ))   # how many parallel extractions
 [ "${PAR_COPY}"    -lt 4 ] && PAR_COPY=4
 [ "${PAR_EXTRACT}" -lt 2 ] && PAR_EXTRACT=2
 echo "[PAR] copy=${PAR_COPY}  extract=${PAR_EXTRACT}"
 
-# ===== funkcje pomocnicze =====
+# ===== helper functions =====
 bytes_dir() { find "$1" -maxdepth 1 -type f -name '*.tar' -printf '%s\n' 2>/dev/null | awk '{s+=$1} END{print s+0}'; }
 human() { awk -v b="${1:-0}" 'function h(x){s="BKMGTPEZY";while(x>=1024&&length(s)>1){x/=1024;s=substr(s,2)};printf "%.2f %s",x,substr(s,1,1)} BEGIN{h(b)}'; }
 
 gather_tar_list() {
-  # wypisuje listę plików .tar (pełne ścieżki) z przekazanych katalogów
+  # prints list of .tar files (full paths) from passed directories
   for d in "$@"; do
     [ -d "$d" ] || continue
     find "$d" -maxdepth 1 -type f -name '*.tar' -print
   done
 }
 
-# ===== przygotowanie list tarów i sprawdzenie miejsca =====
+# ===== prepare tar lists and check space =====
 echo "[LIST] Scanning source tar files..."
 mapfile -t TARS < <(gather_tar_list "${SRC_TRAIN}" "${SRC_VAL}" "${SRC_TEST}")
 N_TARS="${#TARS[@]}"
@@ -102,9 +102,9 @@ fi
 
 echo -e "Stage+Extract benchmark\nDate: ${DATE}\nJob: ${SLURM_JOB_ID}\nNode: ${SLURM_JOB_NODELIST}\n" | tee "${REPORT}"
 
-# ===== kopiowanie równoległe =====
+# ===== parallel copying =====
 stage_split() {
-  local src_dir="$1"   # np. SRC_TRAIN
+  local src_dir="$1"   # e.g. SRC_TRAIN
   local dst_dir="$2"   # DST_TARS/train
   local par="$3"
   local name="$4"      # train|val|test
@@ -121,7 +121,7 @@ stage_split() {
   fi
 
   local t0=$(date +%s)
-  # kopiuj równolegle, ale z guardem na wolną przestrzeń – prosto kopiujemy, a jeśli zabraknie, cp zwróci błąd i przejdziemy dalej
+  # copy in parallel, but with guard on free space – we copy directly, and if space runs out, cp will return error and we move on
   find "$src_dir" -maxdepth 1 -type f -name '*.tar' -print0 \
   | xargs -0 -n1 -P "${par}" -I{} bash -lc '
       src="{}"; base=$(basename "$src"); dst="'"$dst_dir"'/$base";
@@ -133,9 +133,9 @@ stage_split() {
   printf "[STAGE][%s] DONE in %dm %ds (dst now: %s)\n" "$name" $((dt/60)) $((dt%60)) "$(du -sh "$dst_dir" 2>/dev/null | awk "{print \$1}")" | tee -a "${REPORT}"
 }
 
-# ===== rozpakowanie równoległe =====
+# ===== parallel extraction =====
 extract_split() {
-  local src_dir="$1"   # np. DST_TARS/train
+  local src_dir="$1"   # e.g. DST_TARS/train
   local dst_dir="$2"   # DST_EXTRACT/train
   local par="$3"
   local name="$4"
@@ -145,7 +145,7 @@ extract_split() {
 
   echo "[EXTRACT][$name] → ${dst_dir}  (P=${par})"
   local t0=$(date +%s)
-  # rozpakowuj równolegle: każdy tar do własnego podkatalogu (nazwa bez .tar)
+  # extract in parallel: each tar to its own subdirectory (name without .tar)
   find "$src_dir" -maxdepth 1 -type f -name '*.tar' -print0 \
   | xargs -0 -n1 -P "${par}" -I{} bash -lc '
       tarfile="{}"; base=$(basename "$tarfile" .tar)

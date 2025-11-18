@@ -192,15 +192,15 @@ class F1ScoreMeter(ClassyMeter):
                 with open(json_path, "r") as f:
                     existing = json.load(f)
                     if not isinstance(existing, list):
-                        # jeżeli ktoś wcześniej zapisał pojedynczy obiekt — opakuj
+                        # if someone previously saved a single object — wrap it
                         existing = [existing]
             except Exception:
-                # pusty/uszkodzony plik -> zaczynamy od pustej listy
+                # empty/corrupted file -> start with empty list
                 existing = []
 
         existing.append(record)
 
-        # zapisz całą listę z powrotem (pretty)
+        # save entire list back (pretty)
         with open(json_path, "w") as f:
             print(f"[F1ScoreMeter] Writing full report to: {json_path}")
             json.dump(existing, f, indent=2)
